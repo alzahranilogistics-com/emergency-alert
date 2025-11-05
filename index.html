@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚨 نظام تنبيهات الطوارئ - الزهراني</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 40px;">
+
+  <h2>🚨 نظام إنذار الطوارئ - مشرفين الزهراني</h2>
+  <p>أدخل رقمك السعودي لتفعيل التنبيه (مثلاً 0570460094)</p>
+
+  <input id="phone" type="tel" placeholder="05XXXXXXXX" style="padding:10px;width:200px;font-size:16px;">
+  <button id="registerBtn" style="padding:10px 20px;font-size:16px;margin:10px;">تفعيل التنبيه</button>
+
+  <p id="status" style="margin-top:20px;"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgSfZgX13q4tK92T5_6hDR5pNKkhw8YeI",
+      authDomain: "za122-789c0.firebaseapp.com",
+      projectId: "za122-789c0",
+      storageBucket: "za122-789c0.firebasestorage.app",
+      messagingSenderId: "139885324329",
+      appId: "1:139885324329:web:2b8128ba318ef4da93d438"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    document.getElementById("registerBtn").addEventListener("click", () => {
+      const phone = document.getElementById("phone").value;
+      if (!phone) return alert("📱 من فضلك أدخل رقم الجوال أولاً");
+
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          getToken(messaging, {
+            vapidKey: "JgI0qDKhb8czj_YFuqQSThrlPTBcZybj9Ryw7SK8e64"
+          }).then(token => {
+            console.log("🔑 Token:", token);
+            document.getElementById("status").textContent = "✅ تم التسجيل بنجاح! سيصلك التنبيه عند الإرسال.";
+            alert("تم تفعيل التنبيهات لجهازك!");
+          });
+        } else {
+          alert("❌ تم رفض الإذن، لن تصلك التنبيهات.");
+        }
+      });
+    });
+
+    onMessage(messaging, payload => {
+      console.log("📢 إشعار وارد:", payload);
+      new Notification(payload.notification.title, {
+        body: payload.notification.body,
+        icon: payload.notification.icon
+      });
+    });
+  </script>
+</body>
+</html>
