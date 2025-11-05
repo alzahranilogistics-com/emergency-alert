@@ -3,17 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚨 نظام تنبيهات الطوارئ - الزهراني</title>
+  <title>🚨 نظام تنبيه الطوارئ - الزهراني 🚨</title>
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #ff4d4d, #660000);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 15px;
+    }
+
+    input {
+      padding: 12px;
+      font-size: 1.1em;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      width: 80%;
+      max-width: 300px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background-color: #fff;
+      color: #a80000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+      font-size: 1em;
+    }
+
+    button:hover {
+      background-color: #f8d7da;
+    }
+
+    #alertBox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(139, 0, 0, 0.95);
+      color: white;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+    }
+
+    #alertBox h2 {
+      font-size: 2.5em;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { color: white; }
+      50% { color: yellow; }
+      100% { color: white; }
+    }
+
+    #alertBox button {
+      margin-top: 20px;
+      background-color: white;
+      color: red;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+
+    #alertBox audio {
+      display: none;
+    }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px;">
+<body>
 
-  <h2>🚨 نظام إنذار الطوارئ - مشرفين الزهراني</h2>
-  <p>أدخل رقمك السعودي لتفعيل التنبيه (مثلاً 0570460094)</p>
+  <h1>🚨 نظام إنذار طوارئ — مشرفين الزهراني 🚨</h1>
+  <p>أدخل رقم جوالك السعودي لتلقي تنبيهات الطوارئ</p>
+  <input type="tel" id="phoneNumber" placeholder="مثال: 0555956147" maxlength="12">
+  <button id="registerBtn">تسجيل الرقم</button>
 
-  <input id="phone" type="tel" placeholder="05XXXXXXXX" style="padding:10px;width:200px;font-size:16px;">
-  <button id="registerBtn" style="padding:10px 20px;font-size:16px;margin:10px;">تفعيل التنبيه</button>
-
-  <p id="status" style="margin-top:20px;"></p>
+  <div id="alertBox">
+    <h2>🚨 تنبيه طارئ 🚨</h2>
+    <p>يرجى الانتباه فورًا!</p>
+    <button id="dismissBtn">تم الفهم</button>
+    <audio id="alertSound" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" loop></audio>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -31,32 +124,53 @@
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
-    document.getElementById("registerBtn").addEventListener("click", () => {
-      const phone = document.getElementById("phone").value;
-      if (!phone) return alert("📱 من فضلك أدخل رقم الجوال أولاً");
+    const registerBtn = document.getElementById("registerBtn");
+    const phoneInput = document.getElementById("phoneNumber");
 
-      Notification.requestPermission().then(permission => {
+    registerBtn.addEventListener("click", async () => {
+      const phone = phoneInput.value.trim();
+      if (!/^05\d{8}$/.test(phone)) {
+        alert("⚠️ يرجى إدخال رقم سعودي صحيح مثل: 0555956147");
+        return;
+      }
+
+      Notification.requestPermission().then(async (permission) => {
         if (permission === "granted") {
-          getToken(messaging, {
-            vapidKey: "JgI0qDKhb8czj_YFuqQSThrlPTBcZybj9Ryw7SK8e64"
-          }).then(token => {
-            console.log("🔑 Token:", token);
-            document.getElementById("status").textContent = "✅ تم التسجيل بنجاح! سيصلك التنبيه عند الإرسال.";
-            alert("تم تفعيل التنبيهات لجهازك!");
+          const token = await getToken(messaging, {
+            vapidKey: "BEUj85LVbbGFMRVUyKsQXx-5X3SB1LRxUhKQtTBSGx8gKwm0D4HKkRvWNSUXOsIE_8nv1aXBq3SAz63_6Yc6J7k"
           });
+          if (token) {
+            console.log("✅ تم تسجيل جهازك:", token);
+            alert("✅ تم تسجيل رقمك بنجاح لتلقي التنبيهات!");
+          } else {
+            alert("⚠️ لم يتم إنشاء رمز التنبيه بعد، حاول مجددًا.");
+          }
         } else {
-          alert("❌ تم رفض الإذن، لن تصلك التنبيهات.");
+          alert("❌ لم تسمح بالإشعارات، لن تتمكن من استقبال التنبيهات.");
         }
       });
     });
 
-    onMessage(messaging, payload => {
-      console.log("📢 إشعار وارد:", payload);
-      new Notification(payload.notification.title, {
-        body: payload.notification.body,
-        icon: payload.notification.icon
-      });
+    // عرض التنبيه عند وصول إشعار أثناء فتح الصفحة
+    const alertBox = document.getElementById("alertBox");
+    const dismissBtn = document.getElementById("dismissBtn");
+    const alertSound = document.getElementById("alertSound");
+
+    dismissBtn.addEventListener("click", () => {
+      alertBox.style.display = "none";
+      alertSound.pause();
+    });
+
+    onMessage(messaging, (payload) => {
+      console.log("📩 إشعار وارد:", payload);
+      alertBox.style.display = "flex";
+      alertSound.play();
+      setTimeout(() => {
+        alertBox.style.display = "none";
+        alertSound.pause();
+      }, 40000); // 40 ثانية
     });
   </script>
 </body>
 </html>
+
